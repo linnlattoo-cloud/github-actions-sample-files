@@ -1,4 +1,4 @@
-name: sample github actions
+name: Sample GitHub Actions
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
 jobs:
   install-dependencies-and-build:
     runs-on: ubuntu-latest
+
+    env:
+      BUILD_DIR: .next
 
     steps:
       - name: Checkout the repository
@@ -27,7 +30,7 @@ jobs:
       - name: Export static file
         run: |
           mkdir out
-          cp -r .next/* out/
+          cp -r $BUILD_DIR/* out/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -41,19 +44,19 @@ jobs:
     needs: install-dependencies-and-build
 
     steps:
-      - name: download artifact 
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
           path: output-artifact
 
-      - name: deploy to s3
+      - name: Deploy to S3
         uses: jakejarvis/s3-sync-action@master
         with:
           args: --acl public-read --follow-symlinks --delete
         env:
-          AWS_S3_BUCKET:
-          AWS_ACCESS_KEY_ID:
-          AWS_SECRET_ACCESS_KEY:
+          AWS_S3_BUCKET: your-s3-bucket-name
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ap-southeast-1
           SOURCE_DIR: output-artifact
